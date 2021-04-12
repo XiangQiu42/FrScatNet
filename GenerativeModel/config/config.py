@@ -11,10 +11,10 @@ train_config = {
     # 常改参数
     'dataset_root': HOME + '/datasets/cifar-10-batches-py/',  # 训练集根目录
 
-    # 'ScatNets-cifar10' means we use scat net to get the train date, 'FrscatNets-cifar-10' means to use fractional
+    # 'ScatNets-cifar-10' means we use scat net to get the train date, 'FrscatNets-cifar-10' means to use fractional
     # scatNets, note here we just use the filename to distinguish the data from different feature extract method nad
     # different data_sets
-    'dataset': 'test',
+    'dataset': 'FrScatNets-cifar-10',
 
     'model_name': '_' + net_config['net_name'] + '_' + net_config['last_activate'] + net_config['train_x'],
     # 备注存储模型的文件夹
@@ -31,6 +31,10 @@ train_config = {
     'exper_path': '/home/qiuxiang/experiments',
     # give the number of images that U want to save in function "generate_from_model" after train
     'image_generate': 9,
+    'train-images_filename': 'train-images',
+    'test-images_filename': 'test-images',
+    'train-norm_filename': 'train_norm',
+    'test-norm_filename': 'test_norm',
 }
 
 data_config = {

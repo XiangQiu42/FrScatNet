@@ -12,6 +12,7 @@ from config.config import data_config
 
 # Packages for step 2
 from GSN import GSN
+from FrGSN import FrGSN
 from config.config import train_config
 import os
 
@@ -41,23 +42,29 @@ param = {
 }
 # #
 ext = Extract(param=param)
+#
+# # make the related dirs
+# ext.mkdirs()
+#
+# # preprocess the datasets
+# # ext.preProcess_celebA_datasets() # For celebA dataSets
+# # ext.cifar10_unpickle() # For cifar-10 dataSets
+#
+# # # # Extracting features from the image
+# # ext.scat_data()
+#
+# # # # we need to use PCA or FMFta method to compress the features to a implicit vector Z
+# # ext.pca_data(param['train_scat_dir'], param['train_norm_dir'], param['test_scat_dir'], param['test_norm_dir'])
+#
+# alpha_1 = [0.1, 0.4, 0.7, 1.3, 1.6, 1.9, 1, 1, 1, 1, 1, 1]
+# alpha_2 = [1, 1, 1, 1, 1, 1, 0.1, 0.4, 0.7, 1.3, 1.6, 1.9]
 
-# make the related dirs
-ext.mkdirs()
-
-# preprocess the datasets
-# ext.preProcess_celebA_datasets() # For celebA dataSets
-# ext.cifar10_unpickle() # For cifar-10 dataSets
-
-# # # Extracting features from the image
-# ext.scat_data()
-ext.fr_scat_data()
+alpha_1 = [0.5, 1, 0.4, 1]
+alpha_2 = [1, 0.5, 1, 1.6]
+# ext.fr_scat_data(alpha_1=alpha_1, alpha_2=alpha_2)
 # #
-# # # we need to use PCA or FMFta method to compress the features to a implicit vector Z
-ext.pca_data(param['train_scat_dir'],param['train_norm_dir'],param['test_scat_dir'],param['test_norm_dir'])
-
-
-
+# ext.pca_data_fr(param['train_scat_dir'], param['train_norm_dir'], param['test_scat_dir'], param['test_norm_dir'],
+#                 alpha_1=alpha_1, alpha_2=alpha_2)
 
 
 """
@@ -74,26 +81,35 @@ if train_config['cuda']:
     os.environ['CUDA_VISIBLE_DEVICES'] = str(train_config['CUDA_VISIBLE_DEVICES'])
     print("You have config cuda device {} ...".format(train_config['CUDA_VISIBLE_DEVICES']))
 
-
-
 # path1 = "/home/jains/Project-Zhang/generative-scattering-networks-master/experiments/gsn_hf/" \
 #         "celebA_65536_2048_after_65536_ScatJ4_projected512_1norm_ncfl32_NormL1/models/"
 # path2 = "/home/jains/Project-Zhang/generative-scattering-networks-master/experiments/gsn_hf/" \
 #         "celebA_65536_2048_after_65536_ScatJ4_projected512_1norm_ncfl32_NormL1/models/"
-gsn = GSN(train_config)
+# gsn = GSN(train_config)
 # # gsn.compute_errors(1)
 # # gsn.fusion_model(path1=path1,epoch1=1,path2=path2,epoch2=2)
-gsn.train(epoch_to_restore=0, epoch_train=350)
+# gsn.train(epoch_to_restore=0, epoch_train=350)
 
 # gsn.save_originals()
-gsn.generate_from_model(348)
-gsn.compute_errors(340)
-gsn.analyze_model_epoch(348)
-gsn.compute_avg_errors(340,350)
+# gsn.generate_from_model(348)
+# gsn.compute_errors(340)
+# gsn.analyze_model_epoch(348)
+# gsn.compute_avg_errors(340,350)
 
 # Ok, right here ,we have used our model to generate images.
 # The Next Question is: Is out model preform well ??
-gsn.display_model_RESULT()
+# gsn.display_model_RESULT()
+
+# dir1 = "/home/qiuxiang/experiments/ScatNets-cifar-10_32_NormL1_cifar10_tanh(-1,1)"
+# dir2 = "/home/qiuxiang/experiments/FrScatNets-cifar-10_32_NormL1_cifar10_tanh(-1,1)"
+# gsn.compare_scatNets(dir_scat=dir1, dir_fr_scat=dir2)
+
+"""
+to Compare different fractional parameter, use the following code 
+"""
+FrGSN = FrGSN(parameters=train_config,alpha_1=alpha_1, alpha_2=alpha_2)
+# FrGSN.train(epoch_train=100)
+FrGSN.compare_result(scat_dir='/home/qiuxiang/experiments/ScatNets-cifar-10_32_NormL1_cifar10_tanh(-1,1)/')
 
 """
 Finishing Step 2

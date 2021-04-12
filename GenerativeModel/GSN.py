@@ -23,12 +23,13 @@ from utils import create_folder, normalize, create_name_experiment
 import utilss.tools as tool
 import matplotlib.pyplot as plt
 
-
 if net_config['net_name'] == 'dcgan':
     from generator_architecture import Generator128_mpca as Generator, weights_init
+
     print("the net architecture is for {} ".format(net_config['net_name']))
 elif net_config['net_name'] == 'celebA':
     from generator_architecture import Generator128_res2 as Generator, weights_init
+
     print("the net architecture is for {} ".format(net_config['net_name']))
 elif net_config['net_name'] == 'cifar10':
     from generator_architecture import Generator32_3 as Generator, weights_init
@@ -57,14 +58,14 @@ class GSN:
         # self.dir_z_test = os.path.join(dir_datasets, dataset, '{0}_{1}'.format(test_attribute, embedding_attribute))
 
         # give the dir where the original images and implicit vector Z stored at  
-        self.dir_x_train = os.path.join(dir_datasets, 'train-images')
-        self.dir_x_test = os.path.join(dir_datasets, 'test-images')
-        self.dir_z_train = os.path.join(dir_datasets, dataset, 'train_norm')
-        self.dir_z_test = os.path.join(dir_datasets, dataset, 'test_norm')
+        self.dir_x_train = os.path.join(dir_datasets, parameters['train-images_filename'])
+        self.dir_x_test = os.path.join(dir_datasets, parameters['test-images_filename'])
+        self.dir_z_train = os.path.join(dir_datasets, dataset, parameters['train-norm_filename'])
+        self.dir_z_test = os.path.join(dir_datasets, dataset, parameters['test-norm_filename'])
 
         self.images_generate = parameters['image_generate']
 
-        self.dir_experiment = os.path.join(dir_experiments,  name_experiment) + parameters['model_name']
+        self.dir_experiment = os.path.join(dir_experiments, name_experiment) + parameters['model_name']
         self.dir_models = os.path.join(self.dir_experiment, 'models')
         self.dir_logs = os.path.join(self.dir_experiment, 'logs')
         create_folder(self.dir_models)
@@ -78,11 +79,12 @@ class GSN:
         self.last_activate = net_config['last_activate']  # 最后一层网络激活层
         # self.Generator = Generator
         print("***********activate layer is {} ********".format(self.last_activate))
-        print("train data is in {} --- test data is in{} --- network config is{}\n".format(self.dir_x_train.split('/')[-1],
-                                                                                    self.dir_x_test.split('/')[-1],
-                                                                                    parameters['model_name']))
+        print("train data is in {} --- test data is in{} --- network config is{}\n".format(
+            self.dir_x_train.split('/')[-1],
+            self.dir_x_test.split('/')[-1],
+            parameters['model_name']))
 
-    def train(self, epoch_to_restore = 0, epoch_train = 50):
+    def train(self, epoch_to_restore=0, epoch_train=50):
         print("------------train start------------------")
 
         '''训练开始'''
@@ -136,7 +138,7 @@ class GSN:
         # 开始训练
         try:
             epoch = epoch_to_restore
-            while epoch <  epoch_train:
+            while epoch < epoch_train:
                 g.train()
                 for _ in range(self.nb_epochs_to_save):
                     epoch += 1
@@ -202,7 +204,6 @@ class GSN:
                     # 记录所有指标：loss，psnr和ssim, And save it as a csv file
                     df.loc[epoch] = [epoch, loss.cpu().data.numpy(), val_psnr, test_psnr, val_ssim, test_ssim]
                     save_run_data(self.dir_experiment + '/', df=df)
-
 
                     # 将结果添加到tensorboard中
                     writer.add_scalars('psnr', {'val_psnr': val_psnr, 'test_psnr': test_psnr}, epoch)
@@ -310,16 +311,16 @@ class GSN:
         print(
             "epoch{} to epoch{} average MSEloss is {},min MSEloss is {} and epoch is {}".format(epoch_start, epoch_end,
                                                                                                 avg_error / (
-                                                                                                            epoch_end - epoch_start + 1),
+                                                                                                        epoch_end - epoch_start + 1),
                                                                                                 min_MSELoss,
                                                                                                 min_MseEpoch))
         print("epoch{} to epoch{} average PSNR is {},max PSNR is {} and epoch is {}".format(epoch_start, epoch_end,
                                                                                             avg_psnr / (
-                                                                                                        epoch_end - epoch_start + 1),
+                                                                                                    epoch_end - epoch_start + 1),
                                                                                             max_psnr, max_PsnrEpoch))
         print("epoch{} to epoch{} average SSIM is {},max SSIM is {} and epoch is {}".format(epoch_start, epoch_end,
                                                                                             avg_ssim / (
-                                                                                                        epoch_end - epoch_start + 1),
+                                                                                                    epoch_end - epoch_start + 1),
                                                                                             max_ssim, max_SsimEpoch))
 
     def compute_errors(self, epoch):
@@ -356,7 +357,6 @@ class GSN:
         _compute_error(self.dir_z_train, self.dir_x_train, 'train')
         _compute_error(self.dir_z_test, self.dir_x_test, 'test')
 
-
     def generate_from_model(self, epoch):
         filename_model = os.path.join(self.dir_models, 'epoch_{}.pth'.format(epoch))
         g = Generator(self.nb_channels_first_layer, self.dim)
@@ -366,7 +366,7 @@ class GSN:
 
         def _generate_from_model(dir_z, dir_x, train_test):
             dataset = EmbeddingsImagesDataset(dir_z, dir_x)
-            fixed_dataloader = DataLoader(dataset, self.images_generate)
+            fixed_dataloader = DataLoader(dataset, self.images_generate, shuffle=True)
             fixed_batch = next(iter(fixed_dataloader))
 
             # save original images
@@ -377,7 +377,8 @@ class GSN:
             z = Variable(fixed_batch['z']).type(torch.FloatTensor).cuda()
             g_z = g.forward(z)
             filename_images = os.path.join(self.dir_experiment, 'epoch_{}_{}.jpg'.format(epoch, train_test))
-            temp = make_grid(g_z.data[:self.images_generate], nrow=int(math.sqrt(self.images_generate))).cpu().numpy().transpose((1, 2, 0))
+            temp = make_grid(g_z.data[:self.images_generate],
+                             nrow=int(math.sqrt(self.images_generate))).cpu().numpy().transpose((1, 2, 0))
             Image.fromarray(np.uint8((temp + 1) * 127.5)).save(filename_images)
 
         print("Save images generated from epoch:{}".format(epoch))
@@ -434,7 +435,8 @@ class GSN:
             z = Variable(torch.from_numpy(z)).type(torch.FloatTensor).cuda()
             g_z = g.forward(z)
             filename_images = os.path.join(self.dir_experiment, 'epoch_{}_random.png'.format(epoch))
-            temp = make_grid(g_z.data[:self.images_generate], nrow=int(math.sqrt(self.images_generate))).cpu().numpy().transpose((1, 2, 0))
+            temp = make_grid(g_z.data[:self.images_generate],
+                             nrow=int(math.sqrt(self.images_generate))).cpu().numpy().transpose((1, 2, 0))
             Image.fromarray(np.uint8((temp + 1) * 127.5)).save(filename_images)
 
         print("\nGenerate images from random numbers")
@@ -479,11 +481,75 @@ class GSN:
             filename_image = os.path.join(folder_to_save, '{}.png'.format(idx))
             Image.fromarray(np.uint8((g_z[idx] + 1) * 127.5)).save(filename_image)
 
+    def compare_scatNets(self, dir_scat, dir_fr_scat):
+        """ compare the different results based on different feature extraction method
+
+                Parameters
+                ----------
+                dir_scat : string
+                    file dir where loss and PSNR or SSIM stored(ScatNet)
+                dir_fr_scat: string
+                    file dir where loss and PSNR or SSIM stored(FrScatNet)
+        """
+        df_scat = tool.read_run_data(dir_scat + '/')
+        df_fr_scat = tool.read_run_data(dir_fr_scat + '/')
+        Max_epoch = max(df_scat.shape[0], df_fr_scat.shape[0])
+        X = range(0, Max_epoch)
+
+        losses = {'scat': [], 'frScat': []}
+        testloss = {'scat': [], 'frScat': []}
+        train_psnrs = {'scat': [], 'frScat': []}
+        train_ssims = {'scat': [], 'frScat': []}
+        test_psnrs = {'scat': [], 'frScat': []}
+        test_ssims = {'scat': [], 'frScat': []}
+
+        losses['scat'].append(df_scat['loss'])
+        # testloss['scat''].append(df_scat['test_loss'])
+        train_psnrs['scat'].append(df_scat['train_psnr'])
+        test_psnrs['scat'].append(df_scat['test_psnr'])
+        train_ssims['scat'].append(df_scat['train_ssim'])
+        test_ssims['scat'].append(df_scat['test_ssim'])
+
+        losses['frScat'].append(df_fr_scat['loss'])
+        # testloss['frScat'''].append(df_fr__scat['test_loss'])
+        train_psnrs['frScat'].append(df_fr_scat['train_psnr'])
+        test_psnrs['frScat'].append(df_fr_scat['test_psnr'])
+        train_ssims['frScat'].append(df_fr_scat['train_ssim'])
+        test_ssims['frScat'].append(df_fr_scat['test_ssim'])
+
+        plt.figure(1)
+        # 对比 psnr
+        plt.subplot(121)
+        plt.title('PSNR Score')
+
+        for key in train_psnrs.keys():
+            plt.plot(X, train_psnrs[key][0], label=key + '_train')
+        for key in test_psnrs.keys():
+            plt.plot(X, test_psnrs[key][0], label=key + '_train')
+
+        plt.legend()
+        plt.ylabel('PSNR')
+        plt.xlabel('epoch')
+        # plt.show()
+
+        # 对比ssim
+        plt.subplot(122)
+        plt.title('SSIM Score')
+        for key in train_ssims.keys():
+            plt.plot(X, train_ssims[key][0], label=key + '_train')
+        for key in test_ssims.keys():
+            plt.plot(X, test_ssims[key][0], label=key + '_train')
+        plt.legend()
+        plt.ylabel('SSIM')
+        plt.xlabel('epoch')
+        plt.savefig(os.path.join(self.dir_experiment, 'PNSR&SSIM_compare.jpg'))
+        plt.show()
+
     # This function try to analyse our model, which include the loss curve,
     # the compare of PNSR score and so on...
     # note that there is another similar function in utilss.tool
     def display_model_RESULT(self):
-        df = tool.read_run_data(self.dir_experiment+'/')
+        df = tool.read_run_data(self.dir_experiment + '/')
 
         Max_epoch = df.shape[0]
         plt.figure(1)
@@ -502,8 +568,6 @@ class GSN:
         train_ssims.append(df['train_ssim'])
         test_ssims.append(df['test_ssim'])
 
-
-
         # 对比 loss
 
         plt.title('Loss')
@@ -514,7 +578,7 @@ class GSN:
         plt.legend()
         plt.ylabel('Loss')
         plt.xlabel('epoch')
-        plt.savefig(os.path.join(self.dir_experiment,'loss.jpg'))
+        plt.savefig(os.path.join(self.dir_experiment, 'loss.jpg'))
         plt.show()
 
         plt.figure(2)
@@ -548,8 +612,6 @@ class GSN:
         plt.xlabel('epoch')
         plt.savefig(os.path.join(self.dir_experiment, 'PNSR&SSIM.jpg'))
         plt.show()
-
-
 
     def fusion_image(self, path1, epoch1, path2, epoch2):
 

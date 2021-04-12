@@ -22,10 +22,12 @@ import face_recognition
 import gc
 
 import sys
+
 sys.path.append('..')
 
-from kymatio.torch import Fr_Scattering2D,Scattering2D
+from kymatio.torch import Fr_Scattering2D, Scattering2D
 from config.config import train_config, data_config
+
 
 # from utilss.tools import get_nb_files
 
@@ -176,7 +178,7 @@ class Extract:
                              num_needed=num_train)
         self.cut_celeba_face(image_dir=images_test_selected_dir, destination_dir=self.test_img_dir, num_needed=num_test)
 
-    # We neet to use PCA on the whole datasets(include train-set and test-set),
+    # We need to use PCA on the whole datasets(include train-set and test-set),
     def pca_data(self, data_dir_train, out_dir_train, data_dir_test, out_dir_test):
 
         if not os.path.exists(out_dir_train):
@@ -207,10 +209,10 @@ class Extract:
 
         # This function is to read data from "file_dir" but with a batches size
         # so that we don't need large memory to store the data!!!
-        def read_data_batches(file_dir_train, file_num_train, file_list_train,file_dir_test, file_num_test,
-                              file_list_test, batch_size = 1024):
+        def read_data_batches(file_dir_train, file_num_train, file_list_train, file_dir_test, file_num_test,
+                              file_list_test, batch_size=1024):
 
-            for i in range(0,file_num_test+file_num_train,batch_size):
+            for i in range(0, file_num_test + file_num_train, batch_size):
 
                 all_data = []
                 if i < file_num_train:
@@ -233,7 +235,7 @@ class Extract:
                         all_data.append(tmp)
 
                 else:
-                    print("start read file: {} -> {} in test set".format(i + 1- num_train, i + batch_size - num_train))
+                    print("start read file: {} -> {} in test set".format(i + 1 - num_train, i + batch_size - num_train))
                     for j in range(batch_size):
                         if (data_config['npy']):
                             tmp = np.load(file_dir_test + '/' + file_list_test[i + j - num_train])  # 读取npy文件
@@ -241,7 +243,8 @@ class Extract:
                             '''read matlab scat data .mat format'''
                             # name = data_dir + filename_list[i]
                             # t = scio.loadmat(name)
-                            tmp = scio.loadmat(file_dir_test + '/' + file_list_test[i + j -num_train])['all_buf']  # 读取.mat文件
+                            tmp = scio.loadmat(file_dir_test + '/' + file_list_test[i + j - num_train])[
+                                'all_buf']  # 读取.mat文件
 
                         '''read origin image'''
                         # tmp = (np.ascontiguousarray(Image.open(data_dir+'/'+filename_list[i]), dtype=np.uint8).
@@ -271,8 +274,8 @@ class Extract:
             print("We choose IncrementalPCA since the data is too large")
             pca = IncrementalPCA(n_components=data_config['pca_outdim'])
 
-            print('-'*20+"Start fitting the Incremental PCA"+'-'*20)
-            data_iter = read_data_batches(data_dir_train,num_train,train_list,data_dir_test,num_test,test_list,
+            print('-' * 20 + "Start fitting the Incremental PCA" + '-' * 20)
+            data_iter = read_data_batches(data_dir_train, num_train, train_list, data_dir_test, num_test, test_list,
                                           batch_size=batch_size)
             for X_batch in data_iter:
                 # print("The Batch's shape is",X_batch.shape)
@@ -281,17 +284,18 @@ class Extract:
 
             print('~' * 20 + "Start using Incremental PCA to make dimensionality reduction" + '~' * 20)
             count = 0
-            for X_batch in read_data_batches(data_dir_train,num_train,train_list,data_dir_test,num_test,test_list,batch_size=batch_size):
+            for X_batch in read_data_batches(data_dir_train, num_train, train_list, data_dir_test, num_test, test_list,
+                                             batch_size=batch_size):
                 X_result = pca.transform(X_batch)
 
-                print("Saving the reductive features: {0}".format(count+1))
+                print("Saving the reductive features: {0}".format(count + 1))
 
                 for j in range(len(X_result)):
                     if (count < num_train):
-                        str_temp = train_list[j+count].split('.')
+                        str_temp = train_list[j + count].split('.')
                         np.save(out_dir_train + '/' + str_temp[0] + '.npy', X_result[j])
                     else:
-                        str_temp = test_list[j+count-num_train].split('.')
+                        str_temp = test_list[j + count - num_train].split('.')
                         np.save(out_dir_test + '/' + str_temp[0] + '.npy', X_result[j])
                 count += X_result.shape[0]
 
@@ -329,6 +333,24 @@ class Extract:
                 else:
                     str_temp = test_list[j - num_train].split('.')
                     np.save(out_dir_test + '/' + str_temp[0] + '.npy', X[j])
+
+    def pca_data_fr(self, data_dir_train, out_dir_train, data_dir_test, out_dir_test, alpha_1, alpha_2):
+
+        for i in range(len(alpha_1)):
+            a_1 = alpha_1[i]
+            a_2 = alpha_2[i]
+
+            out_dir_test_fr = out_dir_test + "/{0}_{1}".format(a_1, a_2)
+            out_dir_train_fr = out_dir_train + "/{0}_{1}".format(a_1, a_2)
+            data_dir_test_fr = data_dir_test + "/{0}_{1}".format(a_1, a_2)
+            data_dir_train_fr = data_dir_train + "/{0}_{1}".format(a_1, a_2)
+
+            if not os.path.exists(out_dir_train_fr):
+                os.makedirs(out_dir_train_fr)
+            if not os.path.exists(out_dir_test_fr):
+                os.makedirs(out_dir_test_fr)
+
+            self.pca_data(data_dir_train_fr, out_dir_train_fr, data_dir_test_fr, out_dir_test_fr)
 
 
 
@@ -379,17 +401,17 @@ class Extract:
         _scat_data1(self.train_img_dir, self.train_scat_dir)
         _scat_data1(self.test_img_dir, self.test_scat_dir)
 
-    def fr_scat_data(self, alpha_1 = 0.4, alpha_2 = 1):
+    def fr_scat_data(self, alpha_1, alpha_2):
 
         print("Note here we choose to use fractional scatNet to extract features.")
-        print("Where alpha_1 = {0}, alpha_2 = {1}, okay, Let's go!".format(alpha_1, alpha_2))
 
         scat_J = self.scat_J
         img_shape = self.img_shape
         batch_size = self.scat_batchsize
 
-        def _fr_scat_data1(scat_img_dir, scat_out_dir):
+        def _fr_scat_data1(scat_img_dir, scat_out_dir, alpha_1, alpha_2):
 
+            print("Begin processing alpha_1 = {0}, alpha_2 = {1}...".format(alpha_1, alpha_2))
             filename_list = os.listdir(scat_img_dir)  # read the directory files's name
             filename_list.sort()
             count = len(filename_list)
@@ -425,9 +447,20 @@ class Extract:
             print("Fractional Scattering transform over for {} -> {}".format(scat_img_dir, scat_out_dir))
             return
 
-        _fr_scat_data1(self.train_img_dir, self.train_scat_dir)
-        _fr_scat_data1(self.test_img_dir, self.test_scat_dir)
+        for i in range(len(alpha_1)):
+            a_1 = alpha_1[i]
+            a_2 = alpha_2[i]
 
+            train_dir = self.train_scat_dir + "/{0}_{1}".format(a_1, a_2)
+            test_dir = self.test_scat_dir + "/{0}_{1}".format(a_1, a_2)
+
+            if not os.path.exists(train_dir):
+                os.makedirs(train_dir)
+            if not os.path.exists(test_dir):
+                os.makedirs(test_dir)
+
+            _fr_scat_data1(self.train_img_dir, train_dir, alpha_1=a_1, alpha_2=a_2)
+            _fr_scat_data1(self.test_img_dir, test_dir, alpha_1=a_1, alpha_2=a_2)
 
     def nopca_reshape(input_dir, output_dir):
         filename_list = os.listdir(input_dir)  # read the directory files's name
