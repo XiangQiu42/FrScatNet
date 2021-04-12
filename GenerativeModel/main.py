@@ -59,8 +59,8 @@ ext = Extract(param=param)
 # alpha_1 = [0.1, 0.4, 0.7, 1.3, 1.6, 1.9, 1, 1, 1, 1, 1, 1]
 # alpha_2 = [1, 1, 1, 1, 1, 1, 0.1, 0.4, 0.7, 1.3, 1.6, 1.9]
 
-alpha_1 = [0.5, 1, 0.4, 1]
-alpha_2 = [1, 0.5, 1, 1.6]
+alpha_1 = [1, 0.5]
+alpha_2 = [1.5, 1]
 # ext.fr_scat_data(alpha_1=alpha_1, alpha_2=alpha_2)
 # #
 # ext.pca_data_fr(param['train_scat_dir'], param['train_norm_dir'], param['test_scat_dir'], param['test_norm_dir'],
@@ -108,7 +108,7 @@ if train_config['cuda']:
 to Compare different fractional parameter, use the following code 
 """
 FrGSN = FrGSN(parameters=train_config,alpha_1=alpha_1, alpha_2=alpha_2)
-# FrGSN.train(epoch_train=100)
+FrGSN.train(epoch_train=350)
 FrGSN.compare_result(scat_dir='/home/qiuxiang/experiments/ScatNets-cifar-10_32_NormL1_cifar10_tanh(-1,1)/')
 
 """

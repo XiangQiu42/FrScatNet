@@ -65,6 +65,7 @@ class FrGSN():
 
         Scores['SCAT'] = tool.read_run_data(scat_dir)
 
+        Max_epoch = 80
         X = range(0, Max_epoch)
 
         losses = {}
@@ -86,7 +87,7 @@ class FrGSN():
             if key == 'SCAT':
                 plt.plot(X, losses[key][:Max_epoch], 'r--', label=key)
                 continue
-            plt.plot(X, losses[key], label=key)
+            plt.plot(X, losses[key][:Max_epoch], label=key)
         plt.legend()
         plt.ylabel('LOSS')
         plt.xlabel('epoch')
@@ -100,7 +101,7 @@ class FrGSN():
             if key == 'SCAT':
                 plt.plot(X, train_psnrs[key][:Max_epoch], 'r--', label=key)
                 continue
-            plt.plot(X, train_psnrs[key], label=key)
+            plt.plot(X, train_psnrs[key][:Max_epoch], label=key)
         plt.ylabel('train_PSNR')
         plt.xlabel('epoch')
         plt.legend()
@@ -111,7 +112,7 @@ class FrGSN():
             if key == 'SCAT':
                 plt.plot(X, train_ssims[key][:Max_epoch], 'r--', label=key)
                 continue
-            plt.plot(X, train_ssims[key], label=key)
+            plt.plot(X, train_ssims[key][:Max_epoch], label=key)
         plt.legend()
         plt.ylabel('train_SSIM')
         plt.xlabel('epoch')
@@ -122,7 +123,7 @@ class FrGSN():
             if key == 'SCAT':
                 plt.plot(X, test_psnrs[key][:Max_epoch], 'r--', label=key)
                 continue
-            plt.plot(X, test_psnrs[key], label=key)
+            plt.plot(X, test_psnrs[key][:Max_epoch], label=key)
         plt.legend()
         plt.ylabel('test_PSNR')
         plt.xlabel('epoch')
@@ -133,7 +134,7 @@ class FrGSN():
             if key == 'SCAT':
                 plt.plot(X, test_ssims[key][:Max_epoch], 'r--', label=key)
                 continue
-            plt.plot(X, test_ssims[key], label=key)
+            plt.plot(X, test_ssims[key][:Max_epoch], label=key)
         plt.legend()
         plt.ylabel('test_SSIM')
         plt.xlabel('epoch')

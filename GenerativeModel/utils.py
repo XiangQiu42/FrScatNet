@@ -36,6 +36,4 @@ def create_name_experiment(parameters, attribute_experiment):
                                                      parameters['nb_channels_first_layer'],
                                                      attribute_experiment)
 
-    print('Name experiment: {}'.format(name_experiment))
-
     return name_experiment

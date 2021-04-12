@@ -68,7 +68,11 @@ class GSN:
         self.dir_experiment = os.path.join(dir_experiments, name_experiment) + parameters['model_name']
         self.dir_models = os.path.join(self.dir_experiment, 'models')
         self.dir_logs = os.path.join(self.dir_experiment, 'logs')
+
+        if not os.path.exists(self.dir_models):
+            print('Name experiment: {}'.format(name_experiment))
         create_folder(self.dir_models)
+
         create_folder(self.dir_logs)
 
         self.batch_size = parameters['batch_size']
@@ -79,7 +83,7 @@ class GSN:
         self.last_activate = net_config['last_activate']  # 最后一层网络激活层
         # self.Generator = Generator
         print("***********activate layer is {} ********".format(self.last_activate))
-        print("train data is in {} --- test data is in{} --- network config is{}\n".format(
+        print("train data is in {} --- test data is in {} --- network config is {}\n".format(
             self.dir_x_train.split('/')[-1],
             self.dir_x_test.split('/')[-1],
             parameters['model_name']))
